@@ -9,18 +9,24 @@ this.panCss.textContent = '.dpan img{transform-origin:' + ox.toFixed(1) + '% ' +
 this.trkCss = document.createElement('style'); document.head.appendChild(this.trkCss); this.roadCss = document.createElement('style'); document.head.appendChild(this.roadCss); this.trkDist = 0; this.trkPrev = null; this.trkFace = 1;
 this.trackTrk = () => { const st = document.querySelector('.dsteps'); if (!st) return; const r = st.getBoundingClientRect(); const vh = window.innerHeight || document.documentElement.clientHeight || 800; const mob = window.innerWidth <= 760;
 const steps = [...st.querySelectorAll('.dstep')]; const pts = steps.map((sp) => { const d = sp.querySelector('.ddot').getBoundingClientRect(); return [(d.left + d.right) / 2 - r.left, (d.top + d.bottom) / 2 - r.top]; });
-if (!pts.length) return; const key = pts.map((q) => q.map(Math.round).join(':')).join(',') + '|' + Math.round(r.height) + '|' + mob;
-if (key !== this.roadKey) { this.roadKey = key; const P = []; const add = (x, y) => P.push([x, y]); const x0 = pts[0][0];
-  for (let q = 0; q <= 8; q++) add(x0, pts[0][1] * q / 8);
-  for (let k = 0; k + 1 < pts.length; k++) { const [ax, ay] = pts[k], [bx, by] = pts[k + 1]; const c = (by - ay) * 0.55;
-    for (let q = 1; q <= 40; q++) { const t = q / 40, u = 1 - t; add(u * u * u * ax + 3 * u * u * t * ax + 3 * u * t * t * bx + t * t * t * bx, u * u * u * ay + 3 * u * u * t * (ay + c) + 3 * u * t * t * (by - c) + t * t * t * by); } }
-  const lx = pts[pts.length - 1][0]; const ly = pts[pts.length - 1][1]; for (let q = 1; q <= 8; q++) add(lx, ly + (r.height - ly) * q / 8);
-  this.road = P; const d = 'M' + P.map((q) => q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join(' L');
-  this.roadCss.textContent = mob ? '' : '.droad-p,.droad-e{d:path("' + d + '")}'; }
-const P = this.road; const target = vh * 0.52 - r.top; let i = 0; while (i < P.length - 1 && P[i + 1][1] < target) i++;
-let x, y, tx = 0, ty = 1; if (mob) { x = r.width - 29; y = Math.max(30, Math.min(r.height - 30, target)); } else { const A = P[i], B = P[Math.min(i + 1, P.length - 1)]; const f = B[1] > A[1] ? Math.max(0, Math.min(1, (target - A[1]) / (B[1] - A[1]))) : 0; x = A[0] + (B[0] - A[0]) * f; y = A[1] + (B[1] - A[1]) * f; tx = B[0] - A[0]; ty = B[1] - A[1]; }
-let mv = false; if (this.trkPrev != null) { const dd = Math.hypot(x - this.trkPrev[0], y - this.trkPrev[1]); if (dd > 0.5) { this.trkDist += dd; mv = true; const sd = y >= this.trkPrev[1] ? 1 : -1; const hx = tx * sd; if (Math.abs(tx) > 1.2) this.trkFace = hx > 0 ? -1 : 1; } } this.trkPrev = [x, y]; if (!this.trkFace) this.trkFace = 1;
-const nl = Math.hypot(tx, ty) || 1; const tilt = mob ? 0 : Math.max(-10, Math.min(10, 10 * Math.abs(tx) / nl)) * (this.trkFace < 0 ? 1 : -1);
+if (!pts.length) return; const cards = steps.map((sp) => { const c = sp.querySelector('.dcard').getBoundingClientRect(); return [c.top - r.top, c.bottom - r.top]; });
+const key = pts.map((q) => q.map(Math.round).join(':')).join(',') + '|' + Math.round(r.height) + '|' + mob;
+if (key !== this.roadKey) { this.roadKey = key; const segs = []; let d = '';
+  const mk = () => ({ P: [] }); const arc = (o, cx, cy, x0, y0, x1, y1) => { for (let q = 1; q <= 10; q++) { const t = q / 10, u = 1 - t; o.P.push([u * u * x0 + 2 * u * t * cx + t * t * x1, u * u * y0 + 2 * u * t * cy + t * t * y1]); } };
+  const lead = mk(); lead.P.push([pts[0][0], 0], [pts[0][0], pts[0][1]]); segs.push(lead);
+  for (let k = 0; k + 1 < pts.length; k++) { const [ax, ay] = pts[k], [bx, by] = pts[k + 1]; const ym = (cards[k][1] + cards[k + 1][0]) / 2; const sg = Math.sign(bx - ax) || 1; const R = Math.max(10, Math.min(70, ym - ay - 10, by - ym - 10, Math.abs(bx - ax) / 2 - 4));
+    const o = mk(); o.P.push([ax, ay], [ax, ym - R]); arc(o, ax, ym, ax, ym - R, ax + sg * R, ym); o.P.push([bx - sg * R, ym]); arc(o, bx, ym, bx - sg * R, ym, bx, ym + R); o.P.push([bx, by]); segs.push(o); }
+  const tail = mk(); const L = pts[pts.length - 1]; tail.P.push([L[0], L[1]], [L[0], r.height]); segs.push(tail);
+  segs.forEach((o) => { o.S = [0]; for (let q = 1; q < o.P.length; q++) o.S.push(o.S[q - 1] + Math.hypot(o.P[q][0] - o.P[q - 1][0], o.P[q][1] - o.P[q - 1][1])); o.len = o.S[o.S.length - 1]; d += (d ? ' L' : 'M') + o.P.map((q) => q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join(' L'); });
+  this.segs = segs; this.roadCss.textContent = mob ? '' : '.droad-p,.droad-e{d:path("' + d + '")}'; }
+const target = vh * 0.52 - r.top; let x, y, tx = 0, ty = 1;
+if (mob) { x = r.width - 29; y = Math.max(30, Math.min(r.height - 30, target)); } else {
+  const segs = this.segs; let k = 0, t = 0; const bounds = [0].concat(pts.map((q) => q[1])).concat([r.height]);
+  for (k = 0; k < segs.length; k++) { if (target < bounds[k + 1] || k === segs.length - 1) { t = Math.max(0, Math.min(1, (target - bounds[k]) / Math.max(1, bounds[k + 1] - bounds[k]))); break; } }
+  const o = segs[k]; const sv = t * o.len; let j = 0; while (j < o.S.length - 2 && o.S[j + 1] < sv) j++; const A = o.P[j], B = o.P[j + 1] || A; const f = (o.S[j + 1] || 0) > o.S[j] ? (sv - o.S[j]) / (o.S[j + 1] - o.S[j]) : 0;
+  x = A[0] + (B[0] - A[0]) * f; y = A[1] + (B[1] - A[1]) * f; tx = B[0] - A[0]; ty = B[1] - A[1]; }
+let mv = false; if (this.trkPrev != null) { const dd = Math.hypot(x - this.trkPrev[0], y - this.trkPrev[1]); if (dd > 0.5) { this.trkDist += dd; mv = true; const mvx = x - this.trkPrev[0]; if (Math.abs(mvx) > 0.6) this.trkFace = mvx > 0 ? -1 : 1; } } this.trkPrev = [x, y]; if (!this.trkFace) this.trkFace = 1;
+const nl = Math.hypot(tx, ty) || 1; const tilt = 0;
 const W = mob ? 48 : 84; const sc = W / 120; const rw = -this.trkDist / (25 * sc) * 57.3 * 0.8, fw = -this.trkDist / (13 * sc) * 57.3 * 0.8;
 let lit = ''; let dusk = false; steps.forEach((sp, k) => { if (y >= pts[k][1] - 24) { lit += '.dsteps>.dstep:nth-child(' + ([...st.children].indexOf(sp) + 1) + ')'; lit += ','; if (sp.classList.contains('dstep-night') || k >= steps.length - 2) dusk = true; } });
 lit = lit ? lit.replace(/,$/, '') : '';

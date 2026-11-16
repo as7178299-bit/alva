@@ -268,12 +268,16 @@ button{font:inherit}
 }
 /* journey: tractor drives a winding road and colours each stop */
 .dsun{display:none !important}
-.dtrk{position:absolute;left:0;top:0;width:84px;height:63px;margin:-52px 0 0 -42px;z-index:3;pointer-events:none;transition:transform .32s cubic-bezier(.2,.7,.3,1)}
+.dtrk{position:absolute;left:0;top:0;width:84px;height:63px;margin:-56px 0 0 -42px;z-index:3;pointer-events:none;transition:transform .14s linear}
 .dtrk-in{width:100%;height:100%;transition:transform .5s cubic-bezier(.5,0,.3,1);filter:drop-shadow(0 5px 9px rgba(20,58,34,.18))}
 .dtrk svg{width:100%;height:100%;overflow:visible;display:block}
 .dtrk .rw,.dtrk .fw{transform-box:fill-box;transform-origin:center;transition:transform .32s cubic-bezier(.2,.7,.3,1)}
 .dtrk .tb{animation:tbob .18s ease-in-out infinite alternate;animation-play-state:paused}
 .dtrk .beam{opacity:0;transition:opacity 1.2s ease}
+.dtrk .smk circle{fill:#a9a59b;opacity:0;transform-box:fill-box;transform-origin:center;animation:dsmoke 2.6s ease-out infinite}
+.dtrk .smk circle:nth-child(2){animation-delay:-.87s}.dtrk .smk circle:nth-child(3){animation-delay:-1.73s}
+@keyframes dsmoke{0%{opacity:0;transform:translate(0,0) scale(.6)}12%{opacity:.7}100%{opacity:0;transform:translate(18px,-42px) scale(4)}}
+@media (prefers-reduced-motion: reduce){ .dtrk .smk circle{animation:none} }
 @keyframes tbob{from{transform:translateY(0)}to{transform:translateY(-.8px)}}
 .droad{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:1}
 .droad-p{fill:none;stroke:rgba(176,138,84,.22);stroke-width:26;stroke-linecap:round;stroke-linejoin:round}
@@ -544,7 +548,7 @@ button{font:inherit}
 <div class="dline day-line" aria-hidden="true"></div>
 <div class="dsun" aria-hidden="true"></div>
 <svg class="droad" aria-hidden="true"><path class="droad-p" d=""></path><path class="droad-e" d=""></path></svg>
-<div class="dtrk" aria-hidden="true"><div class="dtrk-in"><svg viewBox="0 0 120 90"><defs><linearGradient id="bmg" x1="1" x2="0"><stop offset="0" stop-color="#ffe7a3" stop-opacity=".85"></stop><stop offset="1" stop-color="#ffe7a3" stop-opacity="0"></stop></linearGradient></defs><path class="beam" d="M10 40 L-70 26 L-70 62 Z" fill="url(#bmg)"></path><ellipse cx="58" cy="85.5" rx="50" ry="3.2" fill="rgba(20,45,25,.18)"></ellipse><g class="tb">
+<div class="dtrk" aria-hidden="true"><div class="dtrk-in"><svg viewBox="0 0 120 90"><defs><linearGradient id="bmg" x1="1" x2="0"><stop offset="0" stop-color="#ffe7a3" stop-opacity=".85"></stop><stop offset="1" stop-color="#ffe7a3" stop-opacity="0"></stop></linearGradient></defs><g class="smk"><circle cx="23" cy="10" r="3.2"></circle><circle cx="23" cy="10" r="3.2"></circle><circle cx="23" cy="10" r="3.2"></circle></g><path class="beam" d="M10 40 L-70 26 L-70 62 Z" fill="url(#bmg)"></path><ellipse cx="58" cy="85.5" rx="50" ry="3.2" fill="rgba(20,45,25,.18)"></ellipse><g class="tb">
 <path d="M30 66h34" stroke="#3a3f3c" stroke-width="3" stroke-linecap="round"></path>
 <rect x="20" y="49" width="40" height="13" rx="2" fill="#3f4542"></rect>
 <rect x="24" y="52" width="9" height="7" rx="1.5" fill="#5b625e"></rect><rect x="36" y="51" width="5" height="10" rx="1.5" fill="#bd5a43"></rect><rect x="44" y="53" width="8" height="6" rx="1.5" fill="#5b625e"></rect>
