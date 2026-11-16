@@ -170,17 +170,6 @@ button{font:inherit}
   @keyframes tspin{from{rotate:0deg}to{rotate:-700deg}}
   @keyframes tspinf{from{rotate:0deg}to{rotate:-2200deg}}
 }
-/* line-art tractor riding the day line */
-.dsun{display:none !important}
-.dtrk{position:absolute;left:50%;top:30px;width:56px;height:42px;margin:-32px 0 0 -28px;z-index:1;pointer-events:none;transition:top .25s cubic-bezier(.2,.7,.3,1),transform .25s cubic-bezier(.2,.7,.3,1)}
-.dtrk-in{width:100%;height:100%;transform:scaleX(1);transition:transform .5s cubic-bezier(.5,0,.3,1);filter:drop-shadow(0 4px 8px rgba(20,58,34,.16))}
-.dtrk svg{width:100%;height:100%;overflow:visible;display:block}
-.dtrk .rw,.dtrk .fw{transform-box:fill-box;transform-origin:center;transition:transform .25s cubic-bezier(.2,.7,.3,1)}
-.dtrk .tb{animation:tbob .18s ease-in-out infinite alternate;animation-play-state:paused}
-@keyframes tbob{from{transform:translateY(0)}to{transform:translateY(-.8px)}}
-@media (max-width: 760px){ .dtrk{left:auto;right:29px;margin:-28px -24px 0 0;width:48px;height:36px} .droad{display:none} }
-.droad{position:absolute;top:0;left:50%;width:96px;height:100%;margin-left:-48px;overflow:visible;pointer-events:none;z-index:1}
-.droad-p{fill:none;stroke:rgba(150,104,48,.38);stroke-width:2.2;stroke-dasharray:1.5 7;stroke-linecap:round}
 /* 15:00 card: camera move on scroll */
 .dpan img{width:100%;height:100%;object-fit:cover;object-position:50% 58%;will-change:transform;transition:transform .35s cubic-bezier(.2,.7,.3,1)}
 .spot{background:none !important}.mpar{transform:none !important}
@@ -277,6 +266,38 @@ button{font:inherit}
   .hero-title{font-size:38px !important}
   .swing-stage{transform:scale(.54) !important}
 }
+/* journey: tractor drives a winding road and colours each stop */
+.dsun{display:none !important}
+.dtrk{position:absolute;left:0;top:0;width:84px;height:63px;margin:-52px 0 0 -42px;z-index:3;pointer-events:none;transition:transform .32s cubic-bezier(.2,.7,.3,1)}
+.dtrk-in{width:100%;height:100%;transition:transform .5s cubic-bezier(.5,0,.3,1);filter:drop-shadow(0 5px 9px rgba(20,58,34,.18))}
+.dtrk svg{width:100%;height:100%;overflow:visible;display:block}
+.dtrk .rw,.dtrk .fw{transform-box:fill-box;transform-origin:center;transition:transform .32s cubic-bezier(.2,.7,.3,1)}
+.dtrk .tb{animation:tbob .18s ease-in-out infinite alternate;animation-play-state:paused}
+.dtrk .beam{opacity:0;transition:opacity 1.2s ease}
+@keyframes tbob{from{transform:translateY(0)}to{transform:translateY(-.8px)}}
+.droad{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:1}
+.droad-p{fill:none;stroke:rgba(176,138,84,.22);stroke-width:26;stroke-linecap:round;stroke-linejoin:round}
+.droad-e{fill:none;stroke:rgba(150,104,48,.45);stroke-width:2;stroke-dasharray:2 9;stroke-linecap:round}
+.dsteps .dstep .dcard{transition:transform .5s ease,box-shadow .5s ease,filter 1.1s ease,opacity 1.1s ease}
+.dstep .dcard{filter:grayscale(1) sepia(.18) brightness(1.06);opacity:.5}
+.dstep .ddot{transition:filter .8s ease,transform .6s cubic-bezier(.3,1.6,.5,1)}
+.dstep .ddot{filter:grayscale(1) opacity(.6)}
+.dstep.lit .dcard{filter:none;opacity:1}
+.dstep.lit .ddot{filter:none}
+@media (min-width: 761px){
+  .dline-bg,.dline{display:none}
+  .dsteps{gap:120px}
+  .dstep{grid-template-columns:1fr 1fr;column-gap:0}
+  .dstep-r .dcard{grid-column:1}.dstep-l .dcard{grid-column:2}
+  .dstep .ddot,.dstep .dtime{position:absolute;top:50%;grid-column:1 / -1 !important;grid-row:1}
+  .dstep-r .ddot,.dstep-r .dtime{left:25%}.dstep-l .ddot,.dstep-l .dtime{left:75%}
+  .dstep .ddot{transform:translate(-50%,-50%)}
+  .dstep .dtime{white-space:nowrap}
+  .dstep-r .dtime{transform:translate(calc(-100% - 48px),-50%);text-align:right !important}
+  .dstep-l .dtime{transform:translate(48px,-50%);text-align:left !important}
+  .dstep .dcard{max-width:500px;justify-self:center;width:100%}
+}
+@media (max-width: 760px){ .dtrk{width:48px;height:36px;margin:-30px 0 0 -24px} .droad{display:none} }
 </style>
 </head>
 <body>
@@ -522,8 +543,8 @@ button{font:inherit}
 <div class="dline-bg" aria-hidden="true"></div>
 <div class="dline day-line" aria-hidden="true"></div>
 <div class="dsun" aria-hidden="true"></div>
-<svg class="droad" aria-hidden="true"><path class="droad-p" d=""></path></svg>
-<div class="dtrk" aria-hidden="true"><div class="dtrk-in"><svg viewBox="0 0 120 90"><ellipse cx="58" cy="85.5" rx="50" ry="3.2" fill="rgba(20,45,25,.18)"></ellipse><g class="tb">
+<svg class="droad" aria-hidden="true"><path class="droad-p" d=""></path><path class="droad-e" d=""></path></svg>
+<div class="dtrk" aria-hidden="true"><div class="dtrk-in"><svg viewBox="0 0 120 90"><defs><linearGradient id="bmg" x1="1" x2="0"><stop offset="0" stop-color="#ffe7a3" stop-opacity=".85"></stop><stop offset="1" stop-color="#ffe7a3" stop-opacity="0"></stop></linearGradient></defs><path class="beam" d="M10 40 L-70 26 L-70 62 Z" fill="url(#bmg)"></path><ellipse cx="58" cy="85.5" rx="50" ry="3.2" fill="rgba(20,45,25,.18)"></ellipse><g class="tb">
 <path d="M30 66h34" stroke="#3a3f3c" stroke-width="3" stroke-linecap="round"></path>
 <rect x="20" y="49" width="40" height="13" rx="2" fill="#3f4542"></rect>
 <rect x="24" y="52" width="9" height="7" rx="1.5" fill="#5b625e"></rect><rect x="36" y="51" width="5" height="10" rx="1.5" fill="#bd5a43"></rect><rect x="44" y="53" width="8" height="6" rx="1.5" fill="#5b625e"></rect>

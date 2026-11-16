@@ -7,16 +7,26 @@ const sc = 1.34 - 0.30 * e; const ox = 88 - 38 * e; const oy = 60 - 4 * e; const
 if (k === this.panK && ox.toFixed(1) === this.panO) return; this.panK = k; this.panO = ox.toFixed(1);
 this.panCss.textContent = '.dpan img{transform-origin:' + ox.toFixed(1) + '% ' + oy.toFixed(1) + '% !important;transform:scale(' + sc.toFixed(3) + ') !important}'; };
 this.trkCss = document.createElement('style'); document.head.appendChild(this.trkCss); this.roadCss = document.createElement('style'); document.head.appendChild(this.roadCss); this.trkDist = 0; this.trkPrev = null; this.trkFace = 1;
-this.trackTrk = () => { const st = document.querySelector('.dsteps'); if (!st) return; const r = st.getBoundingClientRect(); const vh = window.innerHeight || document.documentElement.clientHeight || 800;
-const h = Math.max(1, r.height - 60); const p = Math.max(0, Math.min(1, (vh * 0.5 - r.top - 30) / h)); const yl = Math.round(30 + p * h);
-let mv = false; if (this.trkPrev !== null && yl !== this.trkPrev) { this.trkDist += Math.abs(yl - this.trkPrev); mv = true; } this.trkPrev = yl;
-const mob = window.innerWidth <= 760; const A = mob ? 0 : 18; const ys = []; st.querySelectorAll('.ddot').forEach((d) => { const b = d.getBoundingClientRect(); ys.push(Math.round((b.top + b.bottom) / 2 - r.top)); });
-const xAt = (y) => { for (let k = 0; k + 1 < ys.length; k++) { if (y >= ys[k] && y <= ys[k + 1]) { const t = (y - ys[k]) / Math.max(1, ys[k + 1] - ys[k]); return { x: A * Math.sin(Math.PI * t) * (k % 2 ? -1 : 1), v: Math.cos(Math.PI * t) * (k % 2 ? -1 : 1) }; } } return { x: 0, v: 0 }; };
-const key = ys.join(',') + '|' + A; if (key !== this.roadKey) { this.roadKey = key; let d = 'M48 30'; if (ys.length) d += ' L48 ' + ys[0]; for (let k = 0; k + 1 < ys.length; k++) { for (let q = 1; q <= 24; q++) { const y = ys[k] + (ys[k + 1] - ys[k]) * q / 24; d += ' L' + (48 + xAt(y).x).toFixed(1) + ' ' + y.toFixed(1); } } d += ' L48 ' + Math.round(r.height - 30); this.roadCss.textContent = '.droad-p{d:path("' + d + '")}'; }
-const pt = xAt(yl); if (mv && pt.v !== 0) { const dir = (yl - (this.trkLastY == null ? yl : this.trkLastY)) >= 0 ? 1 : -1; this.trkFace = pt.v * dir > 0 ? -1 : 1; } else if (pt.v === 0 && !this.trkFace) { this.trkFace = 1; } this.trkLastY = yl;
-const sc = (mob ? 48 : 56) / 120; const rw = -this.trkDist / (25 * sc) * 57.3 * 0.8, fw = -this.trkDist / (13 * sc) * 57.3 * 0.8;
-this.trkCss.textContent = '.dtrk{top:' + yl + 'px !important;transform:translateX(' + pt.x.toFixed(1) + 'px)}.dtrk-in{transform:scaleX(' + this.trkFace + ') !important}.dtrk .rw{transform:rotate(' + rw.toFixed(1) + 'deg)}.dtrk .fw{transform:rotate(' + fw.toFixed(1) + 'deg)}' + (mv ? '.dtrk .tb{animation-play-state:running}' : '');
-clearTimeout(this.trkStop); if (mv) this.trkStop = setTimeout(() => { this.trkPrev = null; this.trackTrk(); }, 260); };
+this.trackTrk = () => { const st = document.querySelector('.dsteps'); if (!st) return; const r = st.getBoundingClientRect(); const vh = window.innerHeight || document.documentElement.clientHeight || 800; const mob = window.innerWidth <= 760;
+const steps = [...st.querySelectorAll('.dstep')]; const pts = steps.map((sp) => { const d = sp.querySelector('.ddot').getBoundingClientRect(); return [(d.left + d.right) / 2 - r.left, (d.top + d.bottom) / 2 - r.top]; });
+if (!pts.length) return; const key = pts.map((q) => q.map(Math.round).join(':')).join(',') + '|' + Math.round(r.height) + '|' + mob;
+if (key !== this.roadKey) { this.roadKey = key; const P = []; const add = (x, y) => P.push([x, y]); const x0 = pts[0][0];
+  for (let q = 0; q <= 8; q++) add(x0, pts[0][1] * q / 8);
+  for (let k = 0; k + 1 < pts.length; k++) { const [ax, ay] = pts[k], [bx, by] = pts[k + 1]; const c = (by - ay) * 0.55;
+    for (let q = 1; q <= 40; q++) { const t = q / 40, u = 1 - t; add(u * u * u * ax + 3 * u * u * t * ax + 3 * u * t * t * bx + t * t * t * bx, u * u * u * ay + 3 * u * u * t * (ay + c) + 3 * u * t * t * (by - c) + t * t * t * by); } }
+  const lx = pts[pts.length - 1][0]; const ly = pts[pts.length - 1][1]; for (let q = 1; q <= 8; q++) add(lx, ly + (r.height - ly) * q / 8);
+  this.road = P; const d = 'M' + P.map((q) => q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join(' L');
+  this.roadCss.textContent = mob ? '' : '.droad-p,.droad-e{d:path("' + d + '")}'; }
+const P = this.road; const target = vh * 0.52 - r.top; let i = 0; while (i < P.length - 1 && P[i + 1][1] < target) i++;
+let x, y, tx = 0, ty = 1; if (mob) { x = r.width - 29; y = Math.max(30, Math.min(r.height - 30, target)); } else { const A = P[i], B = P[Math.min(i + 1, P.length - 1)]; const f = B[1] > A[1] ? Math.max(0, Math.min(1, (target - A[1]) / (B[1] - A[1]))) : 0; x = A[0] + (B[0] - A[0]) * f; y = A[1] + (B[1] - A[1]) * f; tx = B[0] - A[0]; ty = B[1] - A[1]; }
+let mv = false; if (this.trkPrev != null) { const dd = Math.hypot(x - this.trkPrev[0], y - this.trkPrev[1]); if (dd > 0.5) { this.trkDist += dd; mv = true; const sd = y >= this.trkPrev[1] ? 1 : -1; const hx = tx * sd; if (Math.abs(tx) > 1.2) this.trkFace = hx > 0 ? -1 : 1; } } this.trkPrev = [x, y]; if (!this.trkFace) this.trkFace = 1;
+const nl = Math.hypot(tx, ty) || 1; const tilt = mob ? 0 : Math.max(-10, Math.min(10, 10 * Math.abs(tx) / nl)) * (this.trkFace < 0 ? 1 : -1);
+const W = mob ? 48 : 84; const sc = W / 120; const rw = -this.trkDist / (25 * sc) * 57.3 * 0.8, fw = -this.trkDist / (13 * sc) * 57.3 * 0.8;
+let lit = ''; let dusk = false; steps.forEach((sp, k) => { if (y >= pts[k][1] - 24) { lit += '.dsteps>.dstep:nth-child(' + ([...st.children].indexOf(sp) + 1) + ')'; lit += ','; if (sp.classList.contains('dstep-night') || k >= steps.length - 2) dusk = true; } });
+lit = lit ? lit.replace(/,$/, '') : '';
+const litCss = lit ? lit.split(',').map((q) => q + ' .dcard{filter:none;opacity:1}' + q + ' .ddot{filter:none}').join('') : '';
+this.trkCss.textContent = '.dtrk{transform:translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) !important}.dtrk-in{transform:rotate(' + tilt.toFixed(1) + 'deg) scaleX(' + this.trkFace + ') !important}.dtrk .rw{transform:rotate(' + rw.toFixed(1) + 'deg)}.dtrk .fw{transform:rotate(' + fw.toFixed(1) + 'deg)}' + (mv ? '.dtrk .tb{animation-play-state:running}' : '') + (dusk ? '.dtrk .beam{opacity:1}' : '') + litCss;
+clearTimeout(this.trkStop); if (mv) this.trkStop = setTimeout(() => { this.trackTrk(); }, 260); };
 this.onScrollTrac = () => { if (this.panQ) return; this.panQ = true; requestAnimationFrame(() => { this.trackPan(); this.trackTrk(); }); };
 document.addEventListener('scroll', this.onScrollTrac, { passive: true, capture: true }); window.addEventListener('resize', this.onScrollTrac);
 this.tracHookT = setTimeout(() => { this.trackPan(); this.trackTrk(); }, 300); this.tracFallback = setInterval(() => { this.trackPan(); }, 1200);
