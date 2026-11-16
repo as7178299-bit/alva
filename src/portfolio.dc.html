@@ -260,10 +260,10 @@ button{font:inherit}
 }
 /* journey: tractor drives a winding road and colours each stop */
 .dsun{display:none !important}
-.dtrk{position:absolute;left:0;top:0;width:84px;height:63px;margin:-49px 0 0 -42px;z-index:3;pointer-events:none;transition:transform .14s linear}
-.dtrk-in{width:100%;height:100%;transform-origin:50% 78%;transition:transform .5s cubic-bezier(.5,0,.3,1);filter:drop-shadow(0 5px 9px rgba(20,58,34,.18))}
+.dtrk{position:absolute;left:0;top:0;width:84px;height:63px;margin:-49px 0 0 -42px;z-index:3;pointer-events:none}
+.dtrk-in{width:100%;height:100%;transform-origin:50% 78%;filter:drop-shadow(0 5px 9px rgba(20,58,34,.18))}
 .dtrk svg{width:100%;height:100%;overflow:visible;display:block}
-.dtrk .rw,.dtrk .fw{transform-box:fill-box;transform-origin:center;transition:transform .32s cubic-bezier(.2,.7,.3,1)}
+.dtrk .rw,.dtrk .fw{transform-box:fill-box;transform-origin:center}
 .dtrk .tb{animation:tbob .18s ease-in-out infinite alternate;animation-play-state:paused}
 .dtrk .beam{opacity:0;transition:opacity 1.2s ease}
 .dtrk .smk circle{fill:#a9a59b;opacity:0;transform-box:fill-box;transform-origin:center;animation:dsmoke 2.6s ease-out infinite}
@@ -783,21 +783,37 @@ const target = vh * 0.52 - r.top; let x, y, tx = 0, ty = 1;
 if (mob) { x = r.width - 29; y = Math.max(30, Math.min(r.height - 30, target)); } else {
   const segs = this.segs; let k = 0, t = 0; const bounds = [0].concat(pts.map((q) => q[1])).concat([r.height]);
   for (k = 0; k < segs.length; k++) { if (target < bounds[k + 1] || k === segs.length - 1) { t = Math.max(0, Math.min(1, (target - bounds[k]) / Math.max(1, bounds[k + 1] - bounds[k]))); break; } }
-  const o = segs[k]; const sv = t * o.len; let j = 0; while (j < o.S.length - 2 && o.S[j + 1] < sv) j++; const A = o.P[j], B = o.P[j + 1] || A; const f = (o.S[j + 1] || 0) > o.S[j] ? (sv - o.S[j]) / (o.S[j + 1] - o.S[j]) : 0;
-  x = A[0] + (B[0] - A[0]) * f; y = A[1] + (B[1] - A[1]) * f; tx = B[0] - A[0]; ty = B[1] - A[1]; }
-let mv = false; if (this.trkPrev != null) { const dd = Math.hypot(x - this.trkPrev[0], y - this.trkPrev[1]); if (dd > 0.5) { this.trkDist += dd; mv = true; const vx = x - this.trkPrev[0], vy = y - this.trkPrev[1], vl = Math.hypot(vx, vy); if (vl > 0.6) { const ph = Math.atan2(vy, vx) * 57.2958; const cx = vx / vl; if (cx > 0.03) this.trkFace = -1; else if (cx < -0.03) this.trkFace = 1; let th = this.trkFace < 0 ? -ph : ph - 180; const pv = this.trkTh || 0; while (th - pv > 180) th -= 360; while (th - pv < -180) th += 360; this.trkTh = th; } } } this.trkPrev = [x, y]; if (!this.trkFace) this.trkFace = 1;
+  const o = segs[k]; const at = (v) => { v = Math.max(0, Math.min(o.len, v)); let j = 0; while (j < o.S.length - 2 && o.S[j + 1] < v) j++; const A = o.P[j], B = o.P[j + 1] || A; const g = o.S[j + 1] > o.S[j] ? (v - o.S[j]) / (o.S[j + 1] - o.S[j]) : 0; return [A[0] + (B[0] - A[0]) * g, A[1] + (B[1] - A[1]) * g]; };
+  const sv = t * o.len; const c = at(sv); x = c[0]; y = c[1]; const p1 = at(sv - 14), p2 = at(sv + 14); tx = p2[0] - p1[0]; ty = p2[1] - p1[1]; }
+if (mob) { tx = 0; ty = 1; }
+// scroll direction with hysteresis, so tiny reverse nudges (trackpad inertia) never flip the tractor
+const dT = this.trkLastT == null ? 0 : target - this.trkLastT; this.trkLastT = target; if (!this.trkDir) this.trkDir = 1;
+if (dT * this.trkDir < 0) { this.trkRev = (this.trkRev || 0) + Math.abs(dT); if (this.trkRev > 28) { this.trkDir = -this.trkDir; this.trkRev = 0; } } else if (dT !== 0) this.trkRev = 0;
+let mv = false; if (this.trkPrev != null) { const dd = Math.hypot(x - this.trkPrev[0], y - this.trkPrev[1]); if (dd > 0.5) { this.trkDist += dd; mv = true; } } this.trkPrev = [x, y];
+// heading = smoothed road tangent x travel direction (not the noisy frame-to-frame motion)
+const vx = tx * this.trkDir, vy = ty * this.trkDir, vl = Math.hypot(vx, vy);
+if (vl > 0.01) { const ph = Math.atan2(vy, vx) * 57.2958; const cx = vx / vl; if (cx > 0.06) this.trkFace = -1; else if (cx < -0.06) this.trkFace = 1; if (!this.trkFace) this.trkFace = 1; let th = this.trkFace < 0 ? -ph : ph - 180; const pv = this.trkTh == null ? th : this.trkTh; while (th - pv > 180) th -= 360; while (th - pv < -180) th += 360; this.trkTh = th; }
+if (!this.trkFace) this.trkFace = 1;
 const nl = Math.hypot(tx, ty) || 1; const tilt = this.trkTh || 0;
 const W = mob ? 48 : 84; const sc = W / 120; const rw = -this.trkDist / (25 * sc) * 57.3 * 0.8, fw = -this.trkDist / (13 * sc) * 57.3 * 0.8;
 let lit = ''; let dusk = false; steps.forEach((sp, k) => { if (y >= pts[k][1] - 24) { lit += '.dsteps>.dstep:nth-child(' + ([...st.children].indexOf(sp) + 1) + ')'; lit += ','; if (sp.classList.contains('dstep-night') || k >= steps.length - 2) dusk = true; } });
 lit = lit ? lit.replace(/,$/, '') : '';
 const litCss = lit ? lit.split(',').map((q) => q + ' .dcard{filter:none;opacity:1}' + q + ' .ddot{filter:none}').join('') : '';
-this.trkCss.textContent = '.dtrk{transform:translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) !important}.dtrk-in{transform:scaleX(' + this.trkFace + ') rotate(' + tilt.toFixed(1) + 'deg) !important}.dtrk .rw{transform:rotate(' + rw.toFixed(1) + 'deg)}.dtrk .fw{transform:rotate(' + fw.toFixed(1) + 'deg)}' + (mv ? '.dtrk .tb{animation-play-state:running}' : '') + (dusk ? '.dtrk .beam{opacity:1}' : '') + litCss;
-clearTimeout(this.trkStop); if (mv) this.trkStop = setTimeout(() => { this.trackTrk(); }, 260); };
+this.trkT = { x, y, th: tilt, f: this.trkFace, rw, fw, extra: (dusk ? '.dtrk .beam{opacity:1}' : '') + litCss };
+if (mv) { this.trkMoving = true; clearTimeout(this.trkStop); this.trkStop = setTimeout(() => { this.trkMoving = false; this.kickTrk(); }, 260); }
+this.kickTrk(); };
+// a damped follower: the tractor eases towards its target every frame, so scroll jitter never reaches the screen
+this.kickTrk = () => { if (this.trkRaf) return; const step = () => { this.trkRaf = 0; const T = this.trkT; if (!T) return; const D = this.trkD || (this.trkD = { x: T.x, y: T.y, th: T.th, f: T.f, rw: T.rw, fw: T.fw }); const k = 0.2;
+  D.x += (T.x - D.x) * k; D.y += (T.y - D.y) * k; D.th += (T.th - D.th) * k; D.f += (T.f - D.f) * 0.22; D.rw += (T.rw - D.rw) * k; D.fw += (T.fw - D.fw) * k;
+  const fs = Math.abs(D.f) < 0.06 ? (D.f < 0 ? -0.06 : 0.06) : D.f;
+  this.trkCss.textContent = '.dtrk{transform:translate(' + D.x.toFixed(1) + 'px,' + D.y.toFixed(1) + 'px) !important}.dtrk-in{transform:scaleX(' + fs.toFixed(3) + ') rotate(' + D.th.toFixed(1) + 'deg) !important}.dtrk .rw{transform:rotate(' + D.rw.toFixed(1) + 'deg)}.dtrk .fw{transform:rotate(' + D.fw.toFixed(1) + 'deg)}' + (this.trkMoving ? '.dtrk .tb{animation-play-state:running}' : '') + T.extra;
+  const done = Math.abs(T.x - D.x) < 0.3 && Math.abs(T.y - D.y) < 0.3 && Math.abs(T.th - D.th) < 0.3 && Math.abs(T.f - D.f) < 0.01 && Math.abs(T.rw - D.rw) < 0.5;
+  if (!done) this.trkRaf = requestAnimationFrame(step); }; this.trkRaf = requestAnimationFrame(step); };
 this.onScrollTrac = () => { if (this.panQ) return; this.panQ = true; requestAnimationFrame(() => { this.trackPan(); this.trackTrk(); }); };
 document.addEventListener('scroll', this.onScrollTrac, { passive: true, capture: true }); window.addEventListener('resize', this.onScrollTrac);
 this.tracHookT = setTimeout(() => { this.trackPan(); this.trackTrk(); }, 300); this.tracFallback = setInterval(() => { this.trackPan(); }, 1200);
 }
-componentWillUnmount() { this.stopSound(); clearInterval(this.revTimer); clearTimeout(this.tracHookT); clearInterval(this.tracFallback); document.removeEventListener('scroll', this.onScrollTrac, true); window.removeEventListener('resize', this.onScrollTrac); if (this.panCss) this.panCss.remove(); if (this.trkCss) this.trkCss.remove(); if (this.roadCss) this.roadCss.remove(); clearTimeout(this.trkStop); }
+componentWillUnmount() { this.stopSound(); clearInterval(this.revTimer); clearTimeout(this.tracHookT); clearInterval(this.tracFallback); document.removeEventListener('scroll', this.onScrollTrac, true); window.removeEventListener('resize', this.onScrollTrac); if (this.panCss) this.panCss.remove(); if (this.trkCss) this.trkCss.remove(); if (this.roadCss) this.roadCss.remove(); clearTimeout(this.trkStop); cancelAnimationFrame(this.trkRaf); }
 noiseBuf(ctx, brown) {
 const len = ctx.sampleRate * 4; const buf = ctx.createBuffer(1, len, ctx.sampleRate); const d = buf.getChannelData(0); let last = 0;
 for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; if (brown) { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; } else { d[i] = w; } }
