@@ -6,20 +6,22 @@ let p = (vh * 0.95 - r.top) / (vh * 0.6); p = Math.max(0, Math.min(1, p)); const
 const sc = 1.34 - 0.30 * e; const ox = 88 - 38 * e; const oy = 60 - 4 * e; const k = (sc - 1).toFixed(3);
 if (k === this.panK && ox.toFixed(1) === this.panO) return; this.panK = k; this.panO = ox.toFixed(1);
 this.panCss.textContent = '.dpan img{transform-origin:' + ox.toFixed(1) + '% ' + oy.toFixed(1) + '% !important;transform:scale(' + sc.toFixed(3) + ') !important}'; };
-this.trkCss = document.createElement('style'); document.head.appendChild(this.trkCss); this.trkDist = 0; this.trkPrev = null; this.trkFace = 1;
+this.trkCss = document.createElement('style'); document.head.appendChild(this.trkCss); this.roadCss = document.createElement('style'); document.head.appendChild(this.roadCss); this.trkDist = 0; this.trkPrev = null; this.trkFace = 1;
 this.trackTrk = () => { const st = document.querySelector('.dsteps'); if (!st) return; const r = st.getBoundingClientRect(); const vh = window.innerHeight || document.documentElement.clientHeight || 800;
 const h = Math.max(1, r.height - 60); const p = Math.max(0, Math.min(1, (vh * 0.5 - r.top - 30) / h)); const yl = Math.round(30 + p * h);
 let mv = false; if (this.trkPrev !== null && yl !== this.trkPrev) { this.trkDist += Math.abs(yl - this.trkPrev); mv = true; } this.trkPrev = yl;
-const lx = window.innerWidth <= 760 ? r.right - 29 : r.left + r.width / 2; let best = null, bd = 1e9; st.querySelectorAll('.dcard').forEach((c) => { const cr = c.getBoundingClientRect(); const dd = Math.abs((cr.top + cr.bottom) / 2 - (r.top + yl)); if (dd < bd) { bd = dd; best = cr; } });
-if (best) this.trkFace = ((best.left + best.right) / 2) < lx ? 1 : -1;
-const sc = (window.innerWidth <= 760 ? 58 : 78) / 120; const rw = -this.trkDist / (25 * sc) * 57.3 * 0.8, fw = -this.trkDist / (13 * sc) * 57.3 * 0.8;
-this.trkCss.textContent = '.dtrk{top:' + yl + 'px !important}.dtrk-in{transform:scaleX(' + this.trkFace + ') !important}.dtrk .rw{transform:rotate(' + rw.toFixed(1) + 'deg)}.dtrk .fw{transform:rotate(' + fw.toFixed(1) + 'deg)}' + (mv ? '.dtrk .tb{animation-play-state:running}' : '');
+const mob = window.innerWidth <= 760; const A = mob ? 0 : 18; const ys = []; st.querySelectorAll('.ddot').forEach((d) => { const b = d.getBoundingClientRect(); ys.push(Math.round((b.top + b.bottom) / 2 - r.top)); });
+const xAt = (y) => { for (let k = 0; k + 1 < ys.length; k++) { if (y >= ys[k] && y <= ys[k + 1]) { const t = (y - ys[k]) / Math.max(1, ys[k + 1] - ys[k]); return { x: A * Math.sin(Math.PI * t) * (k % 2 ? -1 : 1), v: Math.cos(Math.PI * t) * (k % 2 ? -1 : 1) }; } } return { x: 0, v: 0 }; };
+const key = ys.join(',') + '|' + A; if (key !== this.roadKey) { this.roadKey = key; let d = 'M48 30'; if (ys.length) d += ' L48 ' + ys[0]; for (let k = 0; k + 1 < ys.length; k++) { for (let q = 1; q <= 24; q++) { const y = ys[k] + (ys[k + 1] - ys[k]) * q / 24; d += ' L' + (48 + xAt(y).x).toFixed(1) + ' ' + y.toFixed(1); } } d += ' L48 ' + Math.round(r.height - 30); this.roadCss.textContent = '.droad-p{d:path("' + d + '")}'; }
+const pt = xAt(yl); if (mv && pt.v !== 0) { const dir = (yl - (this.trkLastY == null ? yl : this.trkLastY)) >= 0 ? 1 : -1; this.trkFace = pt.v * dir > 0 ? -1 : 1; } else if (pt.v === 0 && !this.trkFace) { this.trkFace = 1; } this.trkLastY = yl;
+const sc = (mob ? 48 : 56) / 120; const rw = -this.trkDist / (25 * sc) * 57.3 * 0.8, fw = -this.trkDist / (13 * sc) * 57.3 * 0.8;
+this.trkCss.textContent = '.dtrk{top:' + yl + 'px !important;transform:translateX(' + pt.x.toFixed(1) + 'px)}.dtrk-in{transform:scaleX(' + this.trkFace + ') !important}.dtrk .rw{transform:rotate(' + rw.toFixed(1) + 'deg)}.dtrk .fw{transform:rotate(' + fw.toFixed(1) + 'deg)}' + (mv ? '.dtrk .tb{animation-play-state:running}' : '');
 clearTimeout(this.trkStop); if (mv) this.trkStop = setTimeout(() => { this.trkPrev = null; this.trackTrk(); }, 260); };
 this.onScrollTrac = () => { if (this.panQ) return; this.panQ = true; requestAnimationFrame(() => { this.trackPan(); this.trackTrk(); }); };
 document.addEventListener('scroll', this.onScrollTrac, { passive: true, capture: true }); window.addEventListener('resize', this.onScrollTrac);
 this.tracHookT = setTimeout(() => { this.trackPan(); this.trackTrk(); }, 300); this.tracFallback = setInterval(() => { this.trackPan(); }, 1200);
 }
-componentWillUnmount() { this.stopSound(); clearInterval(this.revTimer); clearTimeout(this.tracHookT); clearInterval(this.tracFallback); document.removeEventListener('scroll', this.onScrollTrac, true); window.removeEventListener('resize', this.onScrollTrac); if (this.panCss) this.panCss.remove(); if (this.trkCss) this.trkCss.remove(); clearTimeout(this.trkStop); }
+componentWillUnmount() { this.stopSound(); clearInterval(this.revTimer); clearTimeout(this.tracHookT); clearInterval(this.tracFallback); document.removeEventListener('scroll', this.onScrollTrac, true); window.removeEventListener('resize', this.onScrollTrac); if (this.panCss) this.panCss.remove(); if (this.trkCss) this.trkCss.remove(); if (this.roadCss) this.roadCss.remove(); clearTimeout(this.trkStop); }
 noiseBuf(ctx, brown) {
 const len = ctx.sampleRate * 4; const buf = ctx.createBuffer(1, len, ctx.sampleRate); const d = buf.getChannelData(0); let last = 0;
 for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; if (brown) { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; } else { d[i] = w; } }
