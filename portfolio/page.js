@@ -25,8 +25,8 @@ if (mob) { x = r.width - 29; y = Math.max(30, Math.min(r.height - 30, target)); 
   for (k = 0; k < segs.length; k++) { if (target < bounds[k + 1] || k === segs.length - 1) { t = Math.max(0, Math.min(1, (target - bounds[k]) / Math.max(1, bounds[k + 1] - bounds[k]))); break; } }
   const o = segs[k]; const sv = t * o.len; let j = 0; while (j < o.S.length - 2 && o.S[j + 1] < sv) j++; const A = o.P[j], B = o.P[j + 1] || A; const f = (o.S[j + 1] || 0) > o.S[j] ? (sv - o.S[j]) / (o.S[j + 1] - o.S[j]) : 0;
   x = A[0] + (B[0] - A[0]) * f; y = A[1] + (B[1] - A[1]) * f; tx = B[0] - A[0]; ty = B[1] - A[1]; }
-let mv = false; if (this.trkPrev != null) { const dd = Math.hypot(x - this.trkPrev[0], y - this.trkPrev[1]); if (dd > 0.5) { this.trkDist += dd; mv = true; const mvx = x - this.trkPrev[0]; if (Math.abs(mvx) > 0.6) this.trkFace = mvx > 0 ? -1 : 1; } } this.trkPrev = [x, y]; if (!this.trkFace) this.trkFace = 1;
-const nl = Math.hypot(tx, ty) || 1; const tilt = 0;
+let mv = false; if (this.trkPrev != null) { const dd = Math.hypot(x - this.trkPrev[0], y - this.trkPrev[1]); if (dd > 0.5) { this.trkDist += dd; mv = true; const vx = x - this.trkPrev[0], vy = y - this.trkPrev[1], vl = Math.hypot(vx, vy); if (vl > 0.6) { if (Math.abs(vx) > 0.5 * vl) this.trkFace = vx > 0 ? -1 : 1; let th = Math.atan2(vy, vx) * 57.2958 - (this.trkFace > 0 ? 180 : 0); const pv = this.trkTh || 0; while (th - pv > 180) th -= 360; while (th - pv < -180) th += 360; this.trkTh = th; } } } this.trkPrev = [x, y]; if (!this.trkFace) this.trkFace = 1;
+const nl = Math.hypot(tx, ty) || 1; const tilt = this.trkTh || 0;
 const W = mob ? 48 : 84; const sc = W / 120; const rw = -this.trkDist / (25 * sc) * 57.3 * 0.8, fw = -this.trkDist / (13 * sc) * 57.3 * 0.8;
 let lit = ''; let dusk = false; steps.forEach((sp, k) => { if (y >= pts[k][1] - 24) { lit += '.dsteps>.dstep:nth-child(' + ([...st.children].indexOf(sp) + 1) + ')'; lit += ','; if (sp.classList.contains('dstep-night') || k >= steps.length - 2) dusk = true; } });
 lit = lit ? lit.replace(/,$/, '') : '';
