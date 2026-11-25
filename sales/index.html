@@ -501,13 +501,17 @@ button{font:inherit}
 <div style="display: flex; transform: translateX({{revShift}}%); transition: transform .8s cubic-bezier(.65,.05,.25,1);">
 <sc-for list="{{reviews}}" as="r" hint-placeholder-count="1">
 <article style="min-width: 100%; box-sizing: border-box; padding: 4px;">
-<div style="background: #fffdf3; border-radius: 30px; padding: 48px 7% 48px; display: flex; flex-direction: column; justify-content: center; gap: 22px; position: relative; overflow: hidden; min-height: 250px;">
+<div style="background: #fffdf3; border-radius: 30px; padding: 48px 7% 40px; display: flex; flex-direction: column; gap: 22px; position: relative; overflow: hidden; min-height: 330px;">
 <svg width="120" height="96" viewBox="0 0 24 20" fill="#e9f3d8" aria-hidden="true" style="position: absolute; top: 18px; left: 28px;"><path d="M0 20V11C0 4.6 3.4 1 9 0l1 2.6C6.6 3.6 5.2 5.6 5 9h5v11zm14 0V11c0-6.4 3.4-10 9-11l1 2.6c-3.4 1-4.8 3-5 6.4h5v11z"></path></svg>
 <div style="position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
 <div style="display: flex; gap: 4px; color: #e8b04b;" role="img" aria-label="5 מתוך 5 כוכבים"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3 6.6 7 .7-5.3 4.8 1.6 7L12 17.3 5.7 21l1.6-7L2 9.3l7-.7z"></path></svg><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3 6.6 7 .7-5.3 4.8 1.6 7L12 17.3 5.7 21l1.6-7L2 9.3l7-.7z"></path></svg><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3 6.6 7 .7-5.3 4.8 1.6 7L12 17.3 5.7 21l1.6-7L2 9.3l7-.7z"></path></svg><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3 6.6 7 .7-5.3 4.8 1.6 7L12 17.3 5.7 21l1.6-7L2 9.3l7-.7z"></path></svg><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3 6.6 7 .7-5.3 4.8 1.6 7L12 17.3 5.7 21l1.6-7L2 9.3l7-.7z"></path></svg></div>
 <span style="font-size: 13px; font-weight: 700; color: #3f7f4e; background: #e9f3d8; padding: 4px 10px; border-radius: 999px;">דוגמה</span>
 </div>
 <p class="rev-text" style="position: relative; margin: 0; font-family: 'Frank Ruhl Libre', serif; font-size: 26px; line-height: 1.55; color: #143a22; font-weight: 500;">{{r.text}}</p>
+<div style="position: relative; display: flex; align-items: center; gap: 14px; margin-top: auto;">
+<div style="width: 52px; height: 52px; border-radius: 50%; background: #1f4d2b; color: #f5c35c; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px;">{{r.initial}}</div>
+<div><div style="font-weight: 800; color: #143a22; font-size: 17px;">{{r.who}}</div><div style="color: #3c5240; font-size: 15px;">{{r.unit}}</div></div>
+</div>
 </div>
 </article>
 </sc-for>
@@ -720,7 +724,6 @@ button{font:inherit}
 </div>
 <div style="max-width: 1200px; margin: 28px auto 0; padding-top: 20px; border-top: 1px solid rgba(207,227,205,.2); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 13px; color: #8fb39a;">
 <span>© 2026 עלווה · כפר נופש</span>
-<span>צילומים: Unsplash</span>
 </div>
 </footer>
 </div>
